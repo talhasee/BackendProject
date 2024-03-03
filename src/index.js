@@ -5,5 +5,5 @@ import dotenv from "dotenv";
 //Note-> if there is some issue in loading these env variables then might not able to connect to database
 dotenv.config();
 
-//Starting Database Connection
+//Starting Database Connection 
 connectDB();
