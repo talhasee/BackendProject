@@ -1,9 +1,15 @@
 import { Router } from "express";
 import {
+  changeCurrentPassword,
+  getCurrentUser,
+  getUserChannelProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refresAccessToken,
   registerUser,
+  updateAcccountDetails,
+  updateCoverImage,
   updateUserAvatar,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -11,7 +17,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/register").post(
+router
+.route("/register")
+.post(
   upload.fields([
     {
       name: "avatar", //frontend field should of same name
@@ -25,15 +33,47 @@ router.route("/register").post(
   registerUser
 );
 
-router.route("/login").post(loginUser);
+router
+.route("/login")
+.post(loginUser);
 
 //Secure Routes
 
-router.route("/logout").post(verifyJWT, logoutUser);
+router
+.route("/logout")
+.post(verifyJWT, logoutUser);
 
-router.route("/refresh-token").post(refresAccessToken);
+router
+.route("/refresh-token")
+.post(refresAccessToken);
 
-router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+router
+.route("/change-password")
+.post(verifyJWT, changeCurrentPassword);
+
+router
+.route("/current-user")
+.get(verifyJWT, getCurrentUser);
+
+router
+.route("/update-account")
+.patch(verifyJWT, updateAcccountDetails);
+
+router
+.route("/avatar")
+.patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+
+router
+.route("/cover-image")
+.patch(verifyJWT, upload.single("coverImage"), updateCoverImage);
+
+router
+.route("/channel/:username")
+.get(verifyJWT, getUserChannelProfile);
+
+router
+.route("/history")
+.get(verifyJWT, getWatchHistory);
 
 
 export default router;
