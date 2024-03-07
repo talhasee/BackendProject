@@ -268,7 +268,7 @@ const updateAcccountDetails = asyncHandler(async (req, res) => {
     throw new apiError("All fields are required");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
@@ -310,7 +310,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
-  return res.status(200).json(200, user, "Avatar Updated Successfully");
+  return res.status(200).json(new apiResponse(200, user, "Avatar Updated Successfully"));
 });
 
 const updateCoverImage = asyncHandler(async (req, res) => {
@@ -337,7 +337,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     }
   );
 
-  return res.status(200).json(200, user, "Cover Image updated successfully");
+  return res.status(200).json(new apiResponse(200, user, "Cover Image updated successfully"));
 });
 
 export {
