@@ -1,10 +1,13 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.models.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import {extractPublicId} from "cloudinary-build-url"
+import { extractPublicId } from "cloudinary-build-url";
 import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -164,8 +167,12 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      //   $set: {
+      //     refreshToken: undefined,
+      //   },
+
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -284,8 +291,6 @@ const updateAcccountDetails = asyncHandler(async (req, res) => {
   ).select("-password");
   await user.save({ validateBeforeSave: false });
 
-  
-
   return res
     .status(200)
     .json(new apiResponse(200, user, "Details upadted successfully"));
@@ -295,7 +300,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   //here we used "file" not "files" because only single file is being asked
   const localAvatarPath = req.file?.path;
   const oldPublicId = extractPublicId(req.user?.avatar);
-//   console.log(oldPublicId);
+  //   console.log(oldPublicId);
 
   if (!localAvatarPath) {
     throw new apiError(400, "Avatar file is missing");
@@ -307,7 +312,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new apiError(400, "Error while uploading avatar");
   }
 
-  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -320,9 +324,11 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const response = deleteFromCloudinary(oldPublicId);
-//   console.log(`Reponse in controller - ${response}`);
+  //   console.log(`Reponse in controller - ${response}`);
 
-  return res.status(200).json(new apiResponse(200, user, "Avatar Updated Successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, user, "Avatar Updated Successfully"));
 });
 
 const updateCoverImage = asyncHandler(async (req, res) => {
@@ -353,145 +359,139 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
   const response = deleteFromCloudinary(oldPublicId);
 
-  return res.status(200).json(new apiResponse(200, user, "Cover Image updated successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, user, "Cover Image updated successfully"));
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    //used params here because we go to url of that channel to see their 
-    //data so we extracted the username from the url or params
-    const {username} = req.params;
+  //used params here because we go to url of that channel to see their
+  //data so we extracted the username from the url or params
+  const { username } = req.params;
 
-    if(!username?.trim()){
-        throw new apiError(400, "Username is missing");
-    }
+  if (!username?.trim()) {
+    throw new apiError(400, "Username is missing");
+  }
 
-    const channel = await User.aggregate([
-        {
-            //first filter to generate data which has channel name  = username 
-            //similar to "where" clause 
-            $match: {
-                username: username?.toLowerCase()
-            },
+  const channel = await User.aggregate([
+    {
+      //first filter to generate data which has channel name  = username
+      //similar to "where" clause
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+    {
+      //In our Subscription model we have used reference of User in subscriber
+      //So every channel or user will be having a document with subscriber a user and channel as himself
+      //it is just left outer join
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
         },
-        {
-            //In our Subscription model we have used reference of User in subscriber
-            //So every channel or user will be having a document with subscriber a user and channel as himself
-            //it is just left outer join
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "channel",
-                as: "subscribers"
-            }
+        channelSubscribedTo: {
+          $size: "$subscribedTo",
         },
-        {
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
-            }
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
         },
-        {
-            $addFields: {
-                subscribersCount: {
-                    $size: "$subscribers"
-                },
-                channelSubscribedTo: {
-                    $size: "$subscribedTo"
-                },
-                isSubscribed: {
-                    $cond: {
-                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
-                        then: true,
-                        else: false
-                    }
-                }
-            }
-        },
-        {
-            $project: {
-                fullName: 1,
-                userName: 1,
-                subscribersCount: 1,
-                channelSubscribedTo: 1,
-                isSubscribed: 1,
-                coverImage: 1,
-                avatar: 1,
-            }
-        }
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        userName: 1,
+        subscribersCount: 1,
+        channelSubscribedTo: 1,
+        isSubscribed: 1,
+        coverImage: 1,
+        avatar: 1,
+      },
+    },
+  ]);
 
-    ]);
+  if (!channel?.length) {
+    throw new apiError(404, "Channel does not exists");
+  }
 
-    if(!channel?.length){
-        throw new apiError(404, "Channel does not exists");
-    }
-
-    return res
+  return res
     .status(200)
-    .json(
-        new apiResponse(
-            200,
-            channel[0],
-            "User channel fetched succesfully"
-        )
-    );
-
+    .json(new apiResponse(200, channel[0], "User channel fetched succesfully"));
 });
 
-const getWatchHistory = asyncHandler(async(req, res) => {
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        {
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
             $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        fullName: 1,
-                                        userName: 1,
-                                        avatar: 1
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        //this will destructure return value and return object instead of array
-                        $addFields: {
-                            owner: {
-                                $first: "$owner"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    ]);
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    userName: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            //this will destructure return value and return object instead of array
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-    return res
+  return res
     .status(200)
     .json(
-        new apiResponse(
-            200,
-            user[0].watchHistory,
-            "Watch history fetched successfully"
-        )
-    )
+      new apiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched successfully"
+      )
+    );
 });
 
 export {

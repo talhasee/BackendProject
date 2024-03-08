@@ -1,1 +1,2 @@
-Figma Link -> [Link](https://www.figma.com/file/shmxWL5FKRO5GNOPPopBg6/PLAY?type=design&node-id=0-1&mode=design&t=Z719S6WJeUn79NcN-0)
+- Figma Link -> [Link](https://www.figma.com/file/shmxWL5FKRO5GNOPPopBg6/PLAY?type=design&node-id=0-1&mode=design&t=Z719S6WJeUn79NcN-0)
+- Model Link -> [Link](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
