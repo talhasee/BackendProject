@@ -5,10 +5,10 @@ import { apiResponse } from "../utils/apiResponse.js";
 import mongoose from "mongoose";
 
 const getLikedVideos = asyncHandler(async (req, res) => {
-    const liked = await Like.aggregate(
+    const likedVideos = await Like.aggregate([
         {
             $match: {
-                likedBy: new mongoose.Types.ObjectId(req.user._id)
+                likedBy: new mongoose.Types.ObjectId(req.user?._id)
             }
         },
         {
@@ -83,7 +83,17 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                 likedVideosCount: { $sum : 1 }
             }
         },
-    )
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(
+            200,
+            likedVideos,
+            "Liked Videos fetched successfully"
+        )
+    );
 });
 
 export {
