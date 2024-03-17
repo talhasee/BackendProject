@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
 
-const tweetSchema = Schema(
+const tweetSchema = new Schema(
   {
     owner: {
         type: Schema.Types.ObjectId,

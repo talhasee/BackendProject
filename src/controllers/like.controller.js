@@ -110,7 +110,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid User");
     }
 
-    const alreadyLiked = Like.findById(
+    const alreadyLiked = await Like.findById(
         {
             video: videoId,
             likedBy: req.user?._id
@@ -171,7 +171,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid User");
     }
 
-    const alreadyLiked = Like.findById(
+    const alreadyLiked = await Like.findById(
         {
             comment: commentId,
             likedBy: req.user?._id

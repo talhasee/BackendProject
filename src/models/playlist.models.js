@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
 
-const playlistSchema = Schema(
+const playlistSchema = new Schema(
     {
         name: {
             type: String,
