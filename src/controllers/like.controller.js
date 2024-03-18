@@ -75,7 +75,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
             }
         },
         {
-            //groups all the document and count number documents in my output but return only accumulated value
+            //groups all the document and count number of documents in my output but return only accumulated value
             //so i have to push likedVideo as well such that it will also come in  output 
             $group: {
                 _id: null,
