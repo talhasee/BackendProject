@@ -403,4 +403,5 @@ export {
     addVideoToPlaylist,
     removeVideoFromPlaylist,
     deletePlaylist,
+    updatePlaylist,
 }
