@@ -10,7 +10,7 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import { User } from "../models/user.models.js";
 import { extractPublicId } from "cloudinary-build-url";
 
-
+//DONE
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
     
@@ -71,16 +71,17 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 });
 
+//DONE
 const getVideoById = asyncHandler(async (req, res) => {
     /*
     think what we need to show on the page when we have video id
     Video with owner's username, subscribers, we had subscribed them or not,
     likes on the video, views on the video, liked by user or not
     */
-    
-    const { videoId } = req.params
-    
-    if(!videoId){
+    const { videoId } = req.params;
+    // console.log(`Video Id - ${videoId}`);
+
+    if(!isValidObjectId(videoId)){
         throw new apiError(400, "Invalid Video id");
     }
 
@@ -91,7 +92,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     const video = await Video.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user?._id)
+                _id: new mongoose.Types.ObjectId(videoId)
             }
         },
         {
@@ -105,7 +106,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "users",
-                locaField: "owner",
+                localField: "owner",
                 foreignField: "_id",
                 as: "owner",
                 pipeline: [
@@ -186,14 +187,19 @@ const getVideoById = asyncHandler(async (req, res) => {
     ]);
 
     if(!video){
-        throw new apiError(500, "Failed video fetching.")
+        throw new apiError(404, "Video not found");
     }
 
-    await video.findByIdandUpdate(videoId, {
-        $inc: {
-            views: 1
-        }
-    })
+    //check if its unique user if yes only then increment views else not
+    const user = await User.findOne( {_id: req.user?._id, watchHistory: { $in: [videoId] } } );
+
+    if(!user){
+        await Video.findByIdAndUpdate(videoId, {
+            $inc: {
+                views: 1
+            }
+        });
+    }
 
     await User.findByIdAndUpdate(req.user?._id,{
         $addToSet: {
@@ -213,9 +219,10 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 });
 
+//DONE
 const updateVideo = asyncHandler(async (req, res) => {
-    const [title, description] = req.body;
-    const [videoId] = req.params;
+    const {title, description} = req.body;
+    const {videoId} = req.params;
 
     if(!isValidObjectId(videoId)){
         throw new apiError(400, "Invalid Video ID");
@@ -241,8 +248,8 @@ const updateVideo = asyncHandler(async (req, res) => {
     const oldDescription = video?.description;
     const oldThumbnail = video?.thumbnail;
 
-    title = title ? title : oldTitle;
-    description = description ? description : oldDescription;
+    const newTitle = title ? title : oldTitle;
+    const newDescription = description ? description : oldDescription;
 
     //if we have user thumbnail image for updation then update url else we 
     //keep url as it is
@@ -259,9 +266,9 @@ const updateVideo = asyncHandler(async (req, res) => {
         videoId,
         {
             $set: {
-                title,
-                description,
-                oldThumbnail
+                title: newTitle,
+                description: newDescription,
+                thumbnail: oldThumbnail
             }
         },
         {
@@ -278,14 +285,15 @@ const updateVideo = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        200,
-        updatedVideo,
-        "Video updated Successfully"
-    )
-
-    
+        new apiResponse(
+            200,
+            updatedVideo,
+            "Video updated Successfully"
+        )
+    );
 });
 
+//
 const deleteVideo = asyncHandler(async(req, res) => {
     const videoId = req.params;
     
@@ -339,8 +347,13 @@ const deleteVideo = asyncHandler(async(req, res) => {
 
 });
 
+const getAllVideos = asyncHandler( async(req, res) => {
+    //Will to figure out later
+});
+
 const togglePublishStatus = asyncHandler(async (req, res) => {
-    const videoId = req.params;
+    const { videoId } = req.params;
+    // console.log(`Video Id - ${videoId}`);
 
     if(!isValidObjectId(videoId)){
         throw new apiError(400, "Invalid video Id");
@@ -352,7 +365,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         throw new apiError(404, "Video not found");
     }
 
-    if(video._id.toString() != req.user?._id.toString()){
+    // console.log(`videoId - ${video.owner.toString()}----------Owner id - ${req.user?._id.toString()}`);
+    if(video.owner.toString() != req.user?._id.toString()){
         throw new apiError(403, "Permission denied");
     }
 
@@ -384,12 +398,11 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     
 });
 
-
-
 export {
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
+    getAllVideos,
     togglePublishStatus,
 };  

@@ -6,7 +6,7 @@ import {
   getWatchHistory,
   loginUser,
   logoutUser,
-  refresAccessToken,
+  refreshAccessToken,
   registerUser,
   updateAcccountDetails,
   updateCoverImage,
@@ -45,7 +45,7 @@ router
 
 router
 .route("/refresh-token")
-.post(refresAccessToken);
+.post(refreshAccessToken);
 
 router
 .route("/change-password")
@@ -68,7 +68,7 @@ router
 .patch(verifyJWT, upload.single("coverImage"), updateCoverImage);
 
 router
-.route("/channel/:username")
+.route("/ch/:username")
 .get(verifyJWT, getUserChannelProfile);
 
 router

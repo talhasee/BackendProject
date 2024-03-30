@@ -12,7 +12,7 @@ import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
-    const user = await User.findOne(userId);
+    const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
@@ -30,6 +30,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
+//DONE
 const registerUser = asyncHandler(async (req, res) => {
   // get user details from frontend
   // validation - not empty
@@ -108,6 +109,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, createdUser, "User registered successfully"));
 });
 
+//DONE
 const loginUser = asyncHandler(async (req, res) => {
   const { password, userName, email } = req.body;
 
@@ -163,6 +165,7 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+//DONE
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -193,7 +196,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "User logged out successfully"));
 });
 
-const refresAccessToken = asyncHandler(async function (req, res) {
+//DONE
+const refreshAccessToken = asyncHandler(async function (req, res) {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
@@ -207,7 +211,7 @@ const refresAccessToken = asyncHandler(async function (req, res) {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken._id);
+    const user = await User.findById(decodedToken?._id);
 
     if (!user) {
       throw new apiError(401, "Invalid refresh token");
@@ -223,29 +227,37 @@ const refresAccessToken = asyncHandler(async function (req, res) {
       secure: true,
     };
 
-    const { newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+    const {accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    // console.log(`ACCESS TOKENN - ${accessToken}`);
+    // console.log(`REFRESH TOKENN - ${refreshToken}`);
+    if(!accessToken || !refreshToken){
+      throw new apiError(500, "Something went wrong in Token generation")
+    }
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new apiResponse(
           200,
           {
             accessToken,
-            refreshToken: newRefreshToken,
+            refreshToken: refreshToken,
           },
           "Access Token refreshed"
         )
       );
   } catch (error) {
-    throw new apiError(401, error?.message || "Invalid refresh Token00");
+    throw new apiError(400, error?.message || "Invalid refresh Token");
   }
 });
 
+//DONE
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const [oldPassword, newPassword] = req.body;
+  const {oldPassword, newPassword} = req.body;
+  // console.log(`OLD PASSWORD - ${oldPassword}-------NEW PASSWORD - ${newPassword}`);
 
   //if our middleware ran successfully then we will be having _id field in req
   const user = await User.findById(req.user?._id);
@@ -264,17 +276,19 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "Password Changed Successfully"));
 });
 
+//DONE
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new apiResponse(200, req.user, "current user fetched successfully"));
 });
 
+//DONE
 const updateAcccountDetails = asyncHandler(async (req, res) => {
-  const [fullName, email] = req.body;
+  const {fullName, email} = req.body;
 
-  if (!fullName || !email) {
-    throw new apiError("All fields are required");
+  if (!fullName && !email) {
+    throw new apiError(400, "Atleast one field required (fullname or email)");
   }
 
   const user = await User.findByIdAndUpdate(
@@ -296,6 +310,7 @@ const updateAcccountDetails = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "Details upadted successfully"));
 });
 
+//DONE
 const updateUserAvatar = asyncHandler(async (req, res) => {
   //here we used "file" not "files" because only single file is being asked
   const localAvatarPath = req.file?.path;
@@ -331,6 +346,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "Avatar Updated Successfully"));
 });
 
+//DONE
 const updateCoverImage = asyncHandler(async (req, res) => {
   //here we used "file" not "files" as we are accepting only a single file
   const coverImageLocalPath = req.file?.path;
@@ -364,80 +380,88 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "Cover Image updated successfully"));
 });
 
+//DONE
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   //used params here because we go to url of that channel to see their
   //data so we extracted the username from the url or params
   const { username } = req.params;
 
   if (!username?.trim()) {
-    throw new apiError(400, "Username is missing");
+      throw new apiError(400, "Username is missing");
   }
 
   const channel = await User.aggregate([
     {
-      //first filter to generate data which has channel name  = username
-      //similar to "where" clause
-      $match: {
-        username: username?.toLowerCase(),
-      },
-    },
-    {
-      //In our Subscription model we have used reference of User in subscriber
-      //So every channel or user will be having a document with subscriber a user and channel as himself
-      //it is just left outer join
-      $lookup: {
-        from: "subscriptions",
-        localField: "_id",
-        foreignField: "channel",
-        as: "subscribers",
-      },
-    },
-    {
-      $lookup: {
-        from: "subscriptions",
-        localField: "_id",
-        foreignField: "subscriber",
-        as: "subscribedTo",
-      },
-    },
-    {
-      $addFields: {
-        subscribersCount: {
-          $size: "$subscribers",
+        //first filter to generate data which has channel name  = username
+        //similar to "where" clause
+        $match: {
+            userName: username?.toLowerCase(),
         },
-        channelSubscribedTo: {
-          $size: "$subscribedTo",
+    },
+    {
+        //In our Subscription model we have used reference of User in subscriber
+        //So every channel or user will be having a document with subscriber a user and channel as himself
+        //it is just left outer join
+        $lookup: {
+            from: "subscriptions",
+            localField: "_id",
+            foreignField: "channel",
+            as: "subscribers",
         },
-        isSubscribed: {
-          $cond: {
-            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-            then: true,
-            else: false,
+    },
+    {
+        $lookup: {
+            from: "subscriptions",
+            localField: "_id",
+            foreignField: "subscriber",
+            as: "subscribedTo",
+        },
+    },
+    {
+        $addFields: {
+            subscribersCount: {
+                $size: "$subscribers",
+            },
+            channelSubscribedTo: {
+                $size: "$subscribedTo",
+            },
+            isSubscribed: {
+                $cond: {
+                  if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                  then: true,
+                  else: false,
+                },
+            },
+        },
+    },
+      {
+          $project: {
+            fullName: 1,
+            userName: 1,
+            subscribersCount: 1,
+            channelSubscribedTo: 1,
+            isSubscribed: 1,
+            coverImage: 1,
+            avatar: 1,
           },
-        },
       },
-    },
-    {
-      $project: {
-        fullName: 1,
-        userName: 1,
-        subscribersCount: 1,
-        channelSubscribedTo: 1,
-        isSubscribed: 1,
-        coverImage: 1,
-        avatar: 1,
-      },
-    },
   ]);
 
-  if (!channel?.length) {
-    throw new apiError(404, "Channel does not exists");
+  // console.log(channel);
+  if (!channel.length) {
+      throw new apiError(404, "Channel does not exists");
   }
 
-  return res
+    return res
     .status(200)
-    .json(new apiResponse(200, channel[0], "User channel fetched succesfully"));
+    .json(
+        new apiResponse(
+          200, 
+          channel[0], 
+          "User channel fetched succesfully")
+    );
 });
+
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
@@ -498,7 +522,7 @@ export {
   registerUser,
   loginUser,
   logoutUser,
-  refresAccessToken,
+  refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
   updateAcccountDetails,

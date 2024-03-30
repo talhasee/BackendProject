@@ -38,11 +38,11 @@ const deleteFromCloudinary = async (publicId) => {
         resource_type: "image",
       })
       .then((result) => {
-        console.log(`Deletion status- ${result}`);
+        console.log(`Deletion status- DONE`);
       });
 
     
-    return response;
+    // return response;
   } catch (error) {
     throw new apiError(500, `Error while deleting- ${error}`);
   }
