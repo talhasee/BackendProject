@@ -173,7 +173,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         },
         {
             $project: {
-                video: 1,
+                videoFile: 1,
                 title: 1,
                 description: 1,
                 owner: 1,
@@ -351,6 +351,7 @@ const getAllVideos = asyncHandler( async(req, res) => {
     //Will to figure out later
 });
 
+//DONE
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     // console.log(`Video Id - ${videoId}`);
