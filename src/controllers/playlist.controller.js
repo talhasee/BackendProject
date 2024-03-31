@@ -2,7 +2,7 @@ import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {Playlist} from "../models/playlist.models.js";
 import mongoose, { isValidObjectId } from "mongoose";
-import { apiResponse } from "../utils/apiResponse";
+import { apiResponse } from "../utils/apiResponse.js";
 import {Video} from "../models/video.models.js";
 
 const createPlaylist = asyncHandler(async (req, res) => {
