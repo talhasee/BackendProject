@@ -5,6 +5,7 @@ import mongoose, { isValidObjectId } from "mongoose";
 import { apiResponse } from "../utils/apiResponse.js";
 import {Video} from "../models/video.models.js";
 
+//DONE
 const createPlaylist = asyncHandler(async (req, res) => {
     const {name, description} = req.body
 
@@ -12,7 +13,9 @@ const createPlaylist = asyncHandler(async (req, res) => {
         throw new apiError(400, "Playlist name is required");
     }
 
-    if(isValidObjectId(req.user?._id)){
+    // console.log(`User - ${req.user?._id}`);
+
+    if(!isValidObjectId(req.user?._id)){
         throw new apiError(400, "Invalid user");
     }
 
@@ -40,6 +43,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
     
 });
 
+//DONE
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const {userId} = req.params;
 
@@ -108,14 +112,15 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     
 });
 
+//DONE
 const getPlaylistById = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
+    const {playlistId} = req.params;
 
     if(!isValidObjectId(playlistId)){
         throw new apiError(400, "Invalid playlist Id");
     }
 
-    const playlistExists = await Playlist.findOne(playlistId);
+    const playlistExists = await Playlist.findById(playlistId);
 
     if(!playlistExists){
         throw new apiError(404, "Playlist not found");
@@ -137,7 +142,9 @@ const getPlaylistById = asyncHandler(async (req, res) => {
                     {
                         $match: {
                             isPublished: true
-                        },
+                        }
+                    },
+                    {
                         $project: {
                             _id: 1,
                             videoFile: 1,
@@ -208,6 +215,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     );
 });
 
+//DONE
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
 
@@ -261,6 +269,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     );
 });
 
+//DONE
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
 
@@ -310,6 +319,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     );
 });
 
+//DONE
 const deletePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
 
@@ -345,6 +355,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 
 });
 
+//DONE
 const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
@@ -353,7 +364,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid Playlist Id");
     }
 
-    if(!name || !description){
+    if(!name && !description){
         throw new apiError(400, "Atleast one field is required name or description");
     }
 
@@ -363,8 +374,8 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         throw new apiError(404, "Playlist not found");
     }
 
-    name = !name ? playlist.name: name;
-    description = !description ? playlist.description : description;
+    // name = !name ? playlist.name: name;
+    // description = !description ? playlist.description : description;
 
     if(playlist.owner.toString() != req.user?._id?.toString()){
         throw new apiError(400, "Only owner can update the playlist");
