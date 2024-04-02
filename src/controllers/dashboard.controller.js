@@ -5,6 +5,7 @@ import {apiResponse} from "../utils/apiResponse.js";
 import {Subscription} from "../models/subscription.models.js";
 import { Video } from "../models/video.models.js";
 
+//DONE
 const getChannelVideos = asyncHandler( async (req, res) => {
     const userId = req.user?._id;
 
@@ -29,8 +30,8 @@ const getChannelVideos = asyncHandler( async (req, res) => {
         {
             $addFields: {
                 creationDate: {
-                    $dataToParts: {
-                        date: "$createAt"
+                    $dateToParts: {
+                        date: "$createdAt"
                     }
                 },
                 likesCount: {
@@ -76,6 +77,7 @@ const getChannelVideos = asyncHandler( async (req, res) => {
     );
 });
 
+//DONE
 const  getChannelStats = asyncHandler( async(req, res) => {
     const userId = req.user?._id;
 
@@ -86,7 +88,7 @@ const  getChannelStats = asyncHandler( async(req, res) => {
     const subscribers = await Subscription.aggregate([
         {
             $match: {
-                channel: new mongoose.Types.ObjectId(user?._id)
+                channel: new mongoose.Types.ObjectId(userId)
             }
         },
         {
@@ -103,7 +105,7 @@ const  getChannelStats = asyncHandler( async(req, res) => {
     const video = await Video.aggregate([
         {
             $match: {
-                owner: new mongoose.Types.ObjectId(user?._id)
+                owner: new mongoose.Types.ObjectId(userId)
             }
         },
         {

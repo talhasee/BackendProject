@@ -4,6 +4,7 @@ import {Like} from "../models/likes.models.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import mongoose, { isValidObjectId } from "mongoose";
 
+//DONE
 const getLikedVideos = asyncHandler(async (req, res) => {
     const likedVideos = await Like.aggregate([
         {
@@ -16,31 +17,31 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                 from: "videos",
                 localField: "video",
                 foreignField: "_id",
-                as: "likedVideo"
-            },
-            pipeline: [
-                {
-                    $lookup: {
-                        from: "users",
-                        localField: "owner",
-                        foreignField: "_id",
-                        as: "ownerDetails"
+                as: "likedVideo",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "ownerDetails",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        userName: 1,
+                                        fullName: 1,
+                                        avatar: 1,
+                                    }
+                                }
+                            ]
+                        },
                     },
-                    pipeline: [
-                        {
-                            $project: {
-                                userName: 1,
-                                fullName: 1,
-                                avatar: 1,
-                            }
-                        }
-                    ]
-                },
-                {
-                    //Destructuring because user would have liked multiple videos of same channel(or user)
-                    $unwind: "$ownerDetails"
-                }
-            ]
+                    {
+                        //Destructuring because user would have liked multiple videos of same channel(or user)
+                        $unwind: "$ownerDetails"
+                    }
+                ]
+            }
         },
         {
             //Again destructuring because it will destructure each likedVideo document and
@@ -83,7 +84,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                 likedVideosCount: { $sum : 1 }
             }
         },
-    ])
+    ]);
 
     return res
     .status(200)
@@ -96,7 +97,9 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     );
 });
 
-//Please implement debouncing throttling technique at client side
+//DONE
+
+//Please implement debouncing or  throttling technique at client side
 //so that this toggleVideoLike is not being called multiple times causing 
 //lots db calls
 const toggleVideoLike = asyncHandler(async (req, res) => {
@@ -110,7 +113,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid User");
     }
 
-    const alreadyLiked = await Like.findById(
+    const alreadyLiked = await Like.findOne(
         {
             video: videoId,
             likedBy: req.user?._id
@@ -118,12 +121,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     );
 
     if(alreadyLiked){
-        const like = await Like.findByIdAndDelete(
-            {
-                video: videoId,
-                likedBy: req.user?._id
-            }
-        );
+        const like = await Like.findByIdAndDelete( alreadyLiked );
 
         if(!like){
             throw new apiError(500, "Error in removing comment Like");
@@ -160,6 +158,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     
 });
 
+//DONE
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     
@@ -171,7 +170,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid User");
     }
 
-    const alreadyLiked = await Like.findById(
+    const alreadyLiked = await Like.findOne(
         {
             comment: commentId,
             likedBy: req.user?._id
@@ -179,12 +178,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     );
 
     if(alreadyLiked){
-        const commentLike = await Like.findByIdAndDelete(
-            {
-                comment: commentId,
-                likedBy: req.user?._id
-            }
-        );
+        const commentLike = await Like.findByIdAndDelete( alreadyLiked );
 
         if(!commentLike){
             throw new apiError(500, "Error in removing comment Like");
@@ -223,6 +217,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
 });
 
+//DONE
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     
@@ -233,7 +228,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid user");
     }
 
-    const alreadyLiked = await Like.findById(
+    const alreadyLiked = await Like.findOne(
         {
             tweet: tweetId,
             likedBy: req.user?._id
@@ -241,12 +236,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     );
 
     if(alreadyLiked){
-        const tweetLike = await Like.findByIdAndDelete(
-            {
-                tweet: tweetId,
-                likedBy: req.user?._id
-            }
-        );
+        const tweetLike = await Like.findByIdAndDelete(alreadyLiked );
         
         if(!tweetLike){
             throw new apiError(500, "Error while removing tweet Like");

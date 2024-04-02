@@ -5,6 +5,7 @@ import {apiError} from "../utils/apiError.js"
 import {apiResponse} from "../utils/apiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
+//DONE
 const createTweet = asyncHandler(async (req, res) => {
     const {content} = req.body;
 
@@ -33,6 +34,7 @@ const createTweet = asyncHandler(async (req, res) => {
         )
     );
 });
+
 
 const getUserTweets = asyncHandler(async (req, res) => {
     const { userId } = req.params;
@@ -131,6 +133,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
     );
 });
 
+//DONE
 const updateTweet = asyncHandler(async (req, res) => {
     const {content} = req.body;
     const {tweetId} = req.params;
@@ -181,10 +184,11 @@ const updateTweet = asyncHandler(async (req, res) => {
 
 });
 
+//DONE
 const deleteTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params;
 
-    if(isValidObjectId(tweetId)){
+    if(!isValidObjectId(tweetId)){
         throw new apiError(400, "Invalid tweet");
     }
 

@@ -6,6 +6,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { Video } from "../models/video.models.js";
 import { Like } from "../models/likes.models.js";
  
+//DONE
 const getVideoComments = asyncHandler( async(req, res) => {
     const {videoId} = req.params;
     const {page = 1, limit = 15} = req.query;
@@ -16,7 +17,7 @@ const getVideoComments = asyncHandler( async(req, res) => {
         throw new apiError(404, "Video not found");
     }
 
-    const commentPipeline = await Comment.aggregate([
+    const commentPipeline = Comment.aggregate([
         {
             $match: {
                 video: new mongoose.Types.ObjectId(videoId)
@@ -88,7 +89,7 @@ const getVideoComments = asyncHandler( async(req, res) => {
 
     const comments = await Comment.aggregatePaginate(
         commentPipeline,
-        options
+        paginateOptions
     );
 
     return res
@@ -102,9 +103,10 @@ const getVideoComments = asyncHandler( async(req, res) => {
     );
 });
 
+//DONE
 const addComment = asyncHandler( async (req, res) => {
-    const videoId = req.params;
-    const content = req.body;
+    const {videoId} = req.params;
+    const {content} = req.body;
 
     if(!content){
         throw new apiError(400, "Comment content cannot be empty");
@@ -137,15 +139,16 @@ const addComment = asyncHandler( async (req, res) => {
     );
 });
 
+//DONE
 const updateComment = asyncHandler( async(req, res) => {
-    const commentId = req.params;
-    const content = req.body;
+    const {commentId} = req.params;
+    const {content} = req.body;
 
     if(!content){
         throw new apiError(400, "Content cannot be empty");
     }
 
-    const comment = Comment.findById(videoId);
+    const comment = await Comment.findById(commentId);
 
     if(!comment){
         throw new apiError(404, "Comment not found");
@@ -182,8 +185,9 @@ const updateComment = asyncHandler( async(req, res) => {
     );
 });
 
+//DONE
 const deleteComment = asyncHandler( async(req, res) => {
-    const commentId = req.params;
+    const {commentId} = req.params;
 
     const comment = await Comment.findById(commentId);
 
@@ -202,7 +206,7 @@ const deleteComment = asyncHandler( async(req, res) => {
         likedBy: req.user?._id
     });
 
-    if(!deleteComment || !likesDocument){
+    if(!deletedComment || !likesDocument){
         throw new apiError(500, "Error deleting Comment");
     }
 
