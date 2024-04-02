@@ -54,4 +54,8 @@ app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/tweet", tweetRouter);
 
-export {app};
+// export {app};
+
+export default (req, res) => {
+  app(req, res);
+ };
