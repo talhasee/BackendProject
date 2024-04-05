@@ -13,7 +13,6 @@ connectDB()
   .then(() => {
     //If not environment variable PORT then use 8000
     const PORT = process.env.PORT || 8000;
-x``
     app.listen(PORT, () => {
       console.log(`Server is listening on PORT ${PORT}`);
     });
