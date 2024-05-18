@@ -238,6 +238,10 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
         throw new apiError(404, "Video not found");
     }
 
+    if(!video.isPublished){
+        throw new apiError(405, "Cannot add unpublished Video");
+    }
+
     if(playlist.owner?.toString() != req.user?._id.toString()){
         throw new apiError(403, "Only owner of the playlist can edit this playlist");
     }
