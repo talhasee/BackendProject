@@ -348,42 +348,45 @@ const deleteVideo = asyncHandler(async(req, res) => {
 });
 
 //DONE
-const getAllVideos = asyncHandler( async(req, res) => {
+const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
 
     const pipeline = [];
     
-    if(query){
-        // console.log(`Query - ${query}`);
-    
+    if (query) {
         pipeline.push({
             $search: {
                 index: "video-search",
                 text: {
-                  query: query,
-                  path: ["title", "description"],
-                  fuzzy: {
-                    maxEdits: 2,
-                    prefixLength: 0,
-                    maxExpansions: 50
-                  }
+                    query: query,
+                    path: ["title", "description"],
+                    fuzzy: {
+                        maxEdits: 2,
+                        prefixLength: 0,
+                        maxExpansions: 50
+                    }
                 }
+            }
+        });
+
+        // Add relevance score to each document
+        pipeline.push({
+            $addFields: {
+                relevance: { $meta: "searchScore" }
             }
         });
     }
 
-    if(userId){
-        if(!isValidObjectId(userId)){
+    if (userId) {
+        if (!isValidObjectId(userId)) {
             throw new apiError(400, "Invalid userId");
         }
 
-        pipeline.push(
-            {
-                $match: {
-                    owner: new mongoose.Types.ObjectId(userId)
-                }
+        pipeline.push({
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId)
             }
-        );
+        });
     }
 
     // Only those videos which are published
@@ -393,15 +396,20 @@ const getAllVideos = asyncHandler( async(req, res) => {
         }
     });
 
-
-    if(sortBy && sortType){
+    // Sort by relevance if query is present
+    if (query) {
+        pipeline.push({
+            $sort: {
+                relevance: -1
+            }
+        });
+    } else if (sortBy && sortType) {
         pipeline.push({
             $sort: {
                 [sortBy]: sortType === 'asc' ? 1 : -1
             }
         });
-    }
-    else{
+    } else {
         pipeline.push({
             $sort: {
                 createdAt: -1
@@ -441,15 +449,18 @@ const getAllVideos = asyncHandler( async(req, res) => {
     const video = await Video.aggregatePaginate(videoPipeline, options);
 
     return res
-    .status(200)
-    .json(
-        new apiResponse(
-            200,
-            video,
-            "Videos fetched successfully"
-        )
-    );
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                video,
+                "Videos fetched successfully"
+            )
+        );
 });
+
+
+
 
 //DONE
 const togglePublishStatus = asyncHandler(async (req, res) => {
