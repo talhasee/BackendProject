@@ -127,7 +127,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                                 $cond: {
                                     if: {
                                         $in: [
-                                            req.user?._id,
+                                            new mongoose.Types.ObjectId(req.user?.id),
                                             "$subscribers.subscriber"
                                         ]
                                     },
@@ -161,7 +161,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                     $cond: {
                         if: {
                             $in: [
-                                req.user?.id,
+                                new mongoose.Types.ObjectId(req.user?.id),
                                 "$likes.likedBy"
                             ]
                         },
