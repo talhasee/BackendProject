@@ -246,21 +246,24 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     const oldTitle = video?.title;
     const oldDescription = video?.description;
-    const oldThumbnail = video?.thumbnail;
+    let oldThumbnail = video?.thumbnail;
+    //deleting old thumbnail and updating with new one
+    const thumbnailToDelete = video.thumbnail.public_id;
 
     const newTitle = title ? title : oldTitle;
     const newDescription = description ? description : oldDescription;
 
     //if we have user thumbnail image for updation then update url else we 
     //keep url as it is
-    if(thumbnailLocalPath){
+    if (thumbnailLocalPath) {
         const newThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-        if(!newThumbnail){
-            throw new apiError(400, "Error in uploading");
+        if (!newThumbnail || !newThumbnail.secure_url) {
+            throw new apiError(400, "Error in uploading thumbnail");
         }
-
-        oldThumbnail = newThumbnail;
+        console.log(JSON.stringify(newThumbnail));
+        oldThumbnail = newThumbnail.url; // Extract the string URL
     }
+    
 
     const updatedVideo = await Video.findByIdAndUpdate(
         videoId,
@@ -279,7 +282,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     if(!updatedVideo){
         throw new apiError(500, "Error in updating video details Try again");
     }else{
-        await deleteFromCloudinary(extractPublicId(oldThumbnail));
+        await deleteFromCloudinary(extractPublicId(thumbnailToDelete));
     }
 
     return res
