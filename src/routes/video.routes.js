@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { getAllVideos, 
+import { deleteVideo, getAllVideos, 
         getVideoById, 
         publishAVideo, 
         togglePublishStatus, 
@@ -45,6 +45,13 @@ router
     verifyJWT,
     getVideoById
 );
+
+router
+.route('/v/:videoId')
+.delete(
+    verifyJWT,
+    deleteVideo
+)
 
 router
 .route('/toggle/publish/:videoId')
