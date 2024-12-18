@@ -510,9 +510,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
         );
 });
 
-
-
-
 //DONE
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
