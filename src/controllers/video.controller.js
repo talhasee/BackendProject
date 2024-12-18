@@ -357,23 +357,71 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const pipeline = [];
     
     if (query) {
+          
         pipeline.push({
             $search: {
                 index: "video-search",
-                text: {
-                    query: query,
-                    path: ["title", "description"],
-                    fuzzy: {
-                        maxEdits: 2,
-                        prefixLength: 0,
-                        maxExpansions: 50
-                    }
+                compound: {
+                    should: [
+                        {
+                            text: {
+                                query: query,
+                                path: "title",
+                                score: { boost: { value: 5 } },
+                                fuzzy: {
+                                    maxEdits: 1,
+                                    prefixLength: 0,
+                                    maxExpansions: 50
+                                }
+                            }
+                        },
+                        {
+                            autocomplete: {
+                                query: query,
+                                path: "title",
+                                score: { boost: { value: 3 } }
+                            }
+                        },
+                        {
+                            wildcard: {
+                                query: `*${query}*`,
+                                path: "title",
+                                score: { boost: { value: 2 } },
+                                allowAnalyzedField: true // Explicitly allow analyzed fields
+                            }
+                        },
+                        {
+                            text: {
+                                query: query,
+                                path: "title",
+                                score: { boost: { value: 5 } },
+                                fuzzy: {
+                                    maxEdits: 2,
+                                    prefixLength: 0,
+                                    maxExpansions: 50
+                                }
+                            }
+                        },
+                        {
+                            text: {
+                                query: query,
+                                path: "description",
+                                score: { boost: { value: 1 } },
+                                fuzzy: {
+                                    maxEdits: 2,
+                                    prefixLength: 0,
+                                    maxExpansions: 50
+                                }
+                            }
+                        }
+                    ],
+                    minimumShouldMatch: 1
                 }
             }
         });
 
-        // Add relevance score to each document
-        pipeline.push({
+
+       pipeline.push({
             $addFields: {
                 relevance: { $meta: "searchScore" }
             }
