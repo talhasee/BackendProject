@@ -353,6 +353,7 @@ const deleteVideo = asyncHandler(async(req, res) => {
 //DONE
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+    const parsedLimit = parseInt(limit);
 
     const pipeline = [];
     
@@ -450,7 +451,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     // Sort by relevance if query is present
     if (!query && !sortBy && !sortType) {
         pipeline.push({
-            $sample: { size: limit } // Limit random results to the required page size
+            $sample: { size: parsedLimit } // Limit random results to the required page size
         });
     }
     else if (query) {
