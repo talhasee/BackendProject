@@ -25,7 +25,7 @@ const getVideoComments = asyncHandler( async(req, res) => {
         },
         {
             $lookup: {
-                from: "owner",
+                from: "users",
                 localField: "owner",
                 foreignField: "_id",
                 as: "ownerDetails"
