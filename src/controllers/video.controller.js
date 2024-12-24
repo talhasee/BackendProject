@@ -448,7 +448,12 @@ const getAllVideos = asyncHandler(async (req, res) => {
     });
 
     // Sort by relevance if query is present
-    if (query) {
+    if (!query && !sortBy && !sortType) {
+        pipeline.push({
+            $sample: { size: limit } // Limit random results to the required page size
+        });
+    }
+    else if (query) {
         pipeline.push({
             $sort: {
                 relevance: -1
