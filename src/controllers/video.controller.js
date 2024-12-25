@@ -29,8 +29,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new apiError(400, "Thumbnail is required");
     }
 
-    const videoFile = await uploadOnCloudinary(videoFileLocalPath);
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const videoFile = await uploadOnCloudinary(videoFileLocalPath, 2);
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath, 1);
 
     if(!videoFile){
         throw new apiError(400, "Error in uploading video File Try again!")
@@ -256,7 +256,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     //if we have user thumbnail image for updation then update url else we 
     //keep url as it is
     if (thumbnailLocalPath) {
-        const newThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+        const newThumbnail = await uploadOnCloudinary(thumbnailLocalPath, 1);
         if (!newThumbnail || !newThumbnail.secure_url) {
             throw new apiError(400, "Error in uploading thumbnail");
         }
@@ -449,15 +449,19 @@ const getAllVideos = asyncHandler(async (req, res) => {
     });
 
     if (!query && !sortBy && !sortType) {
-        pipeline.push({
-            $addFields: {
-                randomScore: { $rand: {} }  // This is correct - empty object is required syntax
-            }
-        });
-        
+        //Implement here random parameter chosing from [views,createdAt, updatedAt, duration]
+        //and then [asc or desc] randomly
+        // Randomly select a field from [views, createdAt, updatedAt, duration, title, description]
+        const sortFields = ['views', 'createdAt', 'updatedAt', 'duration', 'title', 'description'];
+        const randomField = sortFields[Math.floor(Math.random() * sortFields.length)];
+
+        // Randomly select the sort order: 1 for ascending, -1 for descending
+        const sortOrder = Math.random() < 0.5 ? 1 : -1;  // 50% chance for ascending or descending
+
+        // Add the random sort to the pipeline
         pipeline.push({
             $sort: {
-                randomScore: 1
+                [randomField]: sortOrder
             }
         });
     }

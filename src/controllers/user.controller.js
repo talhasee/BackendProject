@@ -79,8 +79,8 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apiError(400, "Avatar file is required");
   }
 
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  const avatar = await uploadOnCloudinary(avatarLocalPath, 1);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath, 1);
 
   if (!avatar) {
     throw new apiError(400, "Avatar files is required. DB Issue");
@@ -321,7 +321,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new apiError(400, "Avatar file is missing");
   }
 
-  const avatar = await uploadOnCloudinary(localAvatarPath);
+  const avatar = await uploadOnCloudinary(localAvatarPath, 1);
 
   if (!avatar.url) {
     throw new apiError(400, "Error while uploading avatar");
@@ -356,7 +356,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     throw new apiError(400, "Cover Image is missing");
   }
 
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath, 1);
 
   if (!coverImage) {
     throw new apiError(400, "Error while uploading Cover Image");
