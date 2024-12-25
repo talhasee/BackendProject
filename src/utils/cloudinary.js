@@ -19,29 +19,31 @@ const uploadOnCloudinary = async (localFilePath, type) => {
     const videoParams = {
       resource_type: 'video',
       transformation: [
-        { format: "mp4", video_codec: "h264" }, // Convert to MP4 format with H.264 codec
-        { fetch_format: "auto" }, // Automatically choose the best format
-        { width: 1920, height: 1080, crop: 'limit' }, // Downscale to 1080p (if larger)
-        { quality: "auto" } // Automatically adjust quality
-      ],
+        { format: "mp4", video_codec: "h264" },
+        { fetch_format: "auto" },
+        { width: 1920, height: 1080, crop: 'limit' },
+        { quality: "auto" },
+      ]
     };
 
     const params = type === 1 ? imageParams : videoParams;
-
-    // Upload the file to Cloudinary
+    
     const response = await cloudinary.uploader.upload(localFilePath, params);
 
-    // File has been uploaded successfully, so now remove it
+    // Cleanup local file after successful upload
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
 
     return response;
   } catch (error) {
-    console.error(`Error while uploading to Cloudinary - ${error}`);
+    console.error(`Error while uploading to Cloudinary `, error);
+    
+    // Cleanup local file on error
     if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath); // Remove the local file if it exists
+      fs.unlinkSync(localFilePath);
     }
+    
     return null;
   }
 };

@@ -40,6 +40,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new apiError(400, "Error in uploading thumbnail Try again!");
     }
 
+    console.log(`VIDEO - ${videoFile?.url}\n ${videoFile?.duration}`);
+    
     const video = await Video.create(
         {
             videoFile: videoFile.url,
