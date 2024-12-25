@@ -448,24 +448,24 @@ const getAllVideos = asyncHandler(async (req, res) => {
         }
     });
 
-    if (!query && !sortBy && !sortType) {
-        //Implement here random parameter chosing from [views,createdAt, updatedAt, duration]
-        //and then [asc or desc] randomly
-        // Randomly select a field from [views, createdAt, updatedAt, duration, title, description]
-        const sortFields = ['views', 'createdAt', 'updatedAt', 'duration', 'title', 'description'];
-        const randomField = sortFields[Math.floor(Math.random() * sortFields.length)];
+    // if (!query && !sortBy && !sortType) {
+    //     //Implement here random parameter chosing from [views,createdAt, updatedAt, duration]
+    //     //and then [asc or desc] randomly
+    //     // Randomly select a field from [views, createdAt, updatedAt, duration, title, description]
+    //     const sortFields = ['views', 'createdAt', 'updatedAt', 'duration', 'title', 'description'];
+    //     const randomField = sortFields[Math.floor(Math.random() * sortFields.length)];
 
-        // Randomly select the sort order: 1 for ascending, -1 for descending
-        const sortOrder = Math.random() < 0.5 ? 1 : -1;  // 50% chance for ascending or descending
+    //     // Randomly select the sort order: 1 for ascending, -1 for descending
+    //     const sortOrder = Math.random() < 0.5 ? 1 : -1;  // 50% chance for ascending or descending
 
-        // Add the random sort to the pipeline
-        pipeline.push({
-            $sort: {
-                [randomField]: sortOrder
-            }
-        });
-    }
-    else if (query) {
+    //     // Add the random sort to the pipeline
+    //     pipeline.push({
+    //         $sort: {
+    //             [randomField]: sortOrder
+    //         }
+    //     });
+    // }
+    if (query) {
         pipeline.push({
             $sort: {
                 relevance: -1
